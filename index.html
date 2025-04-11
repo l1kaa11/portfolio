@@ -71,6 +71,13 @@
 
                 <div class="admin-section">
                     <h3>Добавить замену</h3>
+                    <div class="file-upload">
+                        <input type="file" id="changes-file" accept=".txt" onchange="loadChangesFromFile(event)" style="display: none;">
+                        <button onclick="document.getElementById('changes-file').click()" class="upload-btn">
+                            Загрузить замены из файла
+                        </button>
+                        <p class="file-format-info">Формат файла: номер пары|старый предмет|старый преподаватель|новый предмет|новый преподаватель</p>
+                    </div>
                     <form id="changes-form" onsubmit="event.preventDefault(); addScheduleChange();">
                         <div class="form-row">
                             <label>

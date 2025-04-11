@@ -90,6 +90,18 @@ function displayDutyCalendar() {
         
         const dayElement = document.createElement('div');
         dayElement.className = 'duty-day';
+        
+        // Проверяем, является ли день текущим
+        const currentDate = today.getDate();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        if (date.getDate() === currentDate && 
+            date.getMonth() === currentMonth && 
+            date.getFullYear() === currentYear) {
+            dayElement.classList.add('current-day');
+        }
+        
         dayElement.innerHTML = `
             <h4>${weekDays[date.getDay() - 1]}, ${date.toLocaleDateString()}</h4>
             <p>Дежурные:</p>
@@ -307,16 +319,45 @@ function clearAllChanges() {
     }
 }
 
-// Функция для показа уведомлений
-function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
+// Функция для загрузки файла с заменами
+function loadChangesFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result;
+            const lines = content.split('\n');
+            const newChanges = [];
+
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const parts = line.split('|').map(part => part.trim());
+                    if (parts.length >= 5) {
+                        newChanges.push({
+                            para: parts[0] || '—',
+                            original: parts[1] || '—',
+                            teacher: parts[2] || '—',
+                            replacement: parts[3] || '—',
+                            newTeacher: parts[4] || '—'
+                        });
+                    }
+                }
+            });
+
+            if (newChanges.length > 0) {
+                scheduleChanges = newChanges;
+                localStorage.setItem('scheduleChanges', JSON.stringify(scheduleChanges));
+                updateScheduleChanges();
+                showNotification('Замены успешно загружены из файла', 'success');
+            }
+        } catch (error) {
+            showNotification('Ошибка при чтении файла', 'error');
+            console.error('Error reading file:', error);
+        }
+    };
+    reader.readAsText(file);
 }
 
 // Функция для инициализации списка студентов в админ-панели
