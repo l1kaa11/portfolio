@@ -1,0 +1,26 @@
+[
+    {
+      "para": "2",
+      "original": "МДК 02.02",
+      "teacher": "Кистанова",
+      "replacement": "Физкультура",
+      "newTeacher": "Петров П.П."
+    }
+
+    {
+        "para": "3",
+        "original": "МДК 02.01",
+        "teacher": "Иванов И.И.",
+        "replacement": "Физкультура",
+        "newTeacher": "Петров П.П."
+      }
+
+      {
+        "para": "4",
+        "original": "МДК 02.01",
+        "teacher": "Иванов И.И.",
+        "replacement": "Физкультура",
+        "newTeacher": "Петров П.П."
+      }
+
+  ]

@@ -362,42 +362,56 @@ function clearAllChanges() {
     showNotification('Все замены очищены. Загрузите файл changes.js на GitHub', 'info');
 }
 
-// Функция для загрузки файла с заменами
-function loadChangesFromFile(event) {
+// Функция для проверки обновлений
+async function checkForUpdates() {
+    try {
+        const response = await fetch('changes.js?' + new Date().getTime());
+        const text = await response.text();
+        const newChanges = JSON.parse(text.match(/scheduleChangesData\s*=\s*(\[[\s\S]*?\])/)[1]);
+        
+        if (JSON.stringify(scheduleChanges) !== JSON.stringify(newChanges)) {
+            scheduleChanges = newChanges;
+            updateScheduleChanges();
+            displaySchedule();
+        }
+    } catch (error) {
+        console.error('Ошибка при проверке обновлений:', error);
+    }
+}
+
+// Запускаем проверку обновлений каждые 5 минут
+setInterval(checkForUpdates, 5 * 60 * 1000);
+
+// Модифицируем функцию загрузки изменений
+async function loadChangesFromFile(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
-            const content = e.target.result;
-            const lines = content.split('\n');
-            const newChanges = [];
-
-            lines.forEach(line => {
-                if (line.trim()) {
-                    const parts = line.split('|').map(part => part.trim());
-                    if (parts.length >= 5) {
-                        newChanges.push({
-                            para: parts[0] || '—',
-                            original: parts[1] || '—',
-                            teacher: parts[2] || '—',
-                            replacement: parts[3] || '—',
-                            newTeacher: parts[4] || '—'
-                        });
-                    }
-                }
+            const text = e.target.result;
+            const changes = JSON.parse(text);
+            
+            // Обновляем данные в changes.js
+            const response = await fetch('update_changes.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(changes)
             });
-
-            if (newChanges.length > 0) {
-                scheduleChanges = newChanges;
-                localStorage.setItem('scheduleChanges', JSON.stringify(scheduleChanges));
+            
+            if (response.ok) {
+                alert('Замены успешно обновлены!');
+                scheduleChanges = changes;
                 updateScheduleChanges();
-                showNotification('Замены успешно загружены из файла', 'success');
+                displaySchedule();
+            } else {
+                alert('Ошибка при обновлении замен');
             }
         } catch (error) {
-            showNotification('Ошибка при чтении файла', 'error');
-            console.error('Error reading file:', error);
+            alert('Ошибка при обработке файла: ' + error.message);
         }
     };
     reader.readAsText(file);
