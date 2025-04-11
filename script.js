@@ -271,29 +271,25 @@ function addScheduleChange() {
         newTeacher: newTeacher || '—'
     };
 
+    // Добавляем замену в массив
     scheduleChanges.push(change);
-    updateChangesData(scheduleChanges); // Обновляем данные в файле
     
-    // Очищаем форму
-    document.getElementById('changes-form').reset();
-    
-    // Обновляем отображение
-    updateScheduleChanges();
-    showNotification('Замена добавлена');
+    // Генерируем содержимое файла changes.js
+    let fileContent = '// Здесь хранятся все замены\n';
+    fileContent += 'const scheduleChangesData = [\n';
+    scheduleChanges.forEach((change, index) => {
+        fileContent += '    {\n';
+        fileContent += `        para: "${change.para}",\n`;
+        fileContent += `        original: "${change.original}",\n`;
+        fileContent += `        teacher: "${change.teacher}",\n`;
+        fileContent += `        replacement: "${change.replacement}",\n`;
+        fileContent += `        newTeacher: "${change.newTeacher}"\n`;
+        fileContent += '    }' + (index < scheduleChanges.length - 1 ? ',' : '') + '\n';
+    });
+    fileContent += '];';
 
-    // Экспортируем изменения в файл
-    exportChangesToFile();
-}
-
-// Функция для экспорта замен в файл
-function exportChangesToFile() {
-    let content = 'const scheduleChangesData = ' + JSON.stringify(scheduleChanges, null, 2) + ';\n\n';
-    content += 'function updateChangesData(changes) {\n';
-    content += '    scheduleChangesData.length = 0;\n';
-    content += '    changes.forEach(change => scheduleChangesData.push(change));\n';
-    content += '}';
-
-    const blob = new Blob([content], { type: 'text/javascript' });
+    // Создаем файл для скачивания
+    const blob = new Blob([fileContent], { type: 'text/javascript' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -302,26 +298,68 @@ function exportChangesToFile() {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-
-    showNotification('Файл с заменами сгенерирован. Загрузите его на GitHub', 'info');
+    
+    // Очищаем форму
+    document.getElementById('changes-form').reset();
+    
+    // Обновляем отображение
+    updateScheduleChanges();
+    showNotification('Замена добавлена. Загрузите файл changes.js на GitHub', 'info');
 }
 
 // Функция для удаления замены
 function deleteChange(index) {
     scheduleChanges.splice(index, 1);
-    updateChangesData(scheduleChanges); // Обновляем данные в файле
+    
+    // Генерируем новый файл changes.js
+    let fileContent = '// Здесь хранятся все замены\n';
+    fileContent += 'const scheduleChangesData = [\n';
+    scheduleChanges.forEach((change, i) => {
+        fileContent += '    {\n';
+        fileContent += `        para: "${change.para}",\n`;
+        fileContent += `        original: "${change.original}",\n`;
+        fileContent += `        teacher: "${change.teacher}",\n`;
+        fileContent += `        replacement: "${change.replacement}",\n`;
+        fileContent += `        newTeacher: "${change.newTeacher}"\n`;
+        fileContent += '    }' + (i < scheduleChanges.length - 1 ? ',' : '') + '\n';
+    });
+    fileContent += '];';
+
+    // Создаем файл для скачивания
+    const blob = new Blob([fileContent], { type: 'text/javascript' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'changes.js';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
     updateScheduleChanges();
-    showNotification('Замена удалена');
-    exportChangesToFile(); // Экспортируем изменения в файл
+    showNotification('Замена удалена. Загрузите файл changes.js на GitHub', 'info');
 }
 
 // Функция для очистки всех замен
 function clearAllChanges() {
     scheduleChanges = [];
-    updateChangesData(scheduleChanges); // Обновляем данные в файле
+    
+    // Генерируем пустой файл changes.js
+    const fileContent = '// Здесь хранятся все замены\nconst scheduleChangesData = [];';
+    
+    // Создаем файл для скачивания
+    const blob = new Blob([fileContent], { type: 'text/javascript' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'changes.js';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
     updateScheduleChanges();
-    showNotification('Все замены очищены');
-    exportChangesToFile(); // Экспортируем пустой файл
+    showNotification('Все замены очищены. Загрузите файл changes.js на GitHub', 'info');
 }
 
 // Функция для загрузки файла с заменами
@@ -414,16 +452,16 @@ document.addEventListener('DOMContentLoaded', () => {
         sickStudents = JSON.parse(savedSickStudents);
     }
     
+    // Инициализируем замены из файла данных
+    if (typeof scheduleChangesData !== 'undefined') {
+        scheduleChanges = [...scheduleChangesData];
+    }
+    
     updateDutyInfo();
     displaySchedule();
     updateScheduleChanges();
     displayDutyCalendar();
     initializeAdminPanel();
-    
-    // Инициализируем замены из файла данных
-    if (typeof scheduleChangesData !== 'undefined') {
-        scheduleChanges = [...scheduleChangesData];
-    }
     
     // Обновляем изменения каждые 5 минут
     setInterval(updateScheduleChanges, 5 * 60 * 1000);
