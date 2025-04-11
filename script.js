@@ -236,87 +236,92 @@ async function updateScheduleChanges() {
     const changesContainer = document.getElementById('schedule-changes-list');
     changesContainer.innerHTML = '';
 
-    // Загружаем сохраненные замены
-    const savedChanges = localStorage.getItem('scheduleChanges');
-    if (savedChanges) {
-        scheduleChanges = JSON.parse(savedChanges);
-    }
-
-    if (!Array.isArray(scheduleChanges) || scheduleChanges.length === 0) {
+    if (scheduleChanges.length === 0) {
         changesContainer.innerHTML = '<p class="no-changes">На сегодня замен нет</p>';
     } else {
         scheduleChanges.forEach((change, index) => {
-            // Проверяем, что хотя бы одно из полей замены не пустое и не содержит прочерк
-            if (change.original !== '—' || change.replacement !== '—' || 
-                change.teacher !== '—' || change.newTeacher !== '—') {
-                const changeElement = document.createElement('div');
-                changeElement.className = 'change-item';
-                changeElement.innerHTML = `
-                    <h4>${change.para ? change.para + '-я пара' : 'Без номера пары'}</h4>
-                    <p>Было: ${change.original} (${change.teacher})</p>
-                    <p>Стало: ${change.replacement} (${change.newTeacher})</p>
-                    ${isAdmin ? `<button onclick="deleteChange(${index})" class="delete-change">Удалить</button>` : ''}
-                `;
-                changesContainer.appendChild(changeElement);
-            }
+            const changeElement = document.createElement('div');
+            changeElement.className = 'change-item';
+            changeElement.innerHTML = `
+                <h4>${change.para ? change.para + '-я пара' : 'Без номера пары'}</h4>
+                <p>Было: ${change.original} (${change.teacher})</p>
+                <p>Стало: ${change.replacement} (${change.newTeacher})</p>
+                ${isAdmin ? `<button onclick="deleteChange(${index})" class="delete-change">Удалить</button>` : ''}
+            `;
+            changesContainer.appendChild(changeElement);
         });
     }
 
-    // Обновляем время последнего обновления
     document.getElementById('last-update-time').textContent = new Date().toLocaleString();
 }
 
 // Функция для добавления новой замены
 function addScheduleChange() {
-    // Получаем значения полей
-    const para = document.getElementById('change-para').value.trim();
-    const original = document.getElementById('change-original').value.trim();
-    const teacher = document.getElementById('change-teacher').value.trim();
-    const replacement = document.getElementById('change-replacement').value.trim();
-    const newTeacher = document.getElementById('change-new-teacher').value.trim();
+    const para = document.getElementById('change-para').value;
+    const original = document.getElementById('change-original').value;
+    const teacher = document.getElementById('change-teacher').value;
+    const replacement = document.getElementById('change-replacement').value;
+    const newTeacher = document.getElementById('change-new-teacher').value;
 
     const change = {
-        para: parseInt(para) || '',
+        para: para || '—',
         original: original || '—',
         teacher: teacher || '—',
         replacement: replacement || '—',
         newTeacher: newTeacher || '—'
     };
 
-    // Инициализируем массив, если он пустой
-    if (!Array.isArray(scheduleChanges)) {
-        scheduleChanges = [];
-    }
-
     scheduleChanges.push(change);
-    localStorage.setItem('scheduleChanges', JSON.stringify(scheduleChanges));
+    updateChangesData(scheduleChanges); // Обновляем данные в файле
     
     // Очищаем форму
     document.getElementById('changes-form').reset();
     
     // Обновляем отображение
     updateScheduleChanges();
-    
-    // Показываем уведомление
     showNotification('Замена добавлена');
+
+    // Экспортируем изменения в файл
+    exportChangesToFile();
+}
+
+// Функция для экспорта замен в файл
+function exportChangesToFile() {
+    let content = 'const scheduleChangesData = ' + JSON.stringify(scheduleChanges, null, 2) + ';\n\n';
+    content += 'function updateChangesData(changes) {\n';
+    content += '    scheduleChangesData.length = 0;\n';
+    content += '    changes.forEach(change => scheduleChangesData.push(change));\n';
+    content += '}';
+
+    const blob = new Blob([content], { type: 'text/javascript' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'changes.js';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    showNotification('Файл с заменами сгенерирован. Загрузите его на GitHub', 'info');
 }
 
 // Функция для удаления замены
 function deleteChange(index) {
     scheduleChanges.splice(index, 1);
-    localStorage.setItem('scheduleChanges', JSON.stringify(scheduleChanges));
+    updateChangesData(scheduleChanges); // Обновляем данные в файле
     updateScheduleChanges();
     showNotification('Замена удалена');
+    exportChangesToFile(); // Экспортируем изменения в файл
 }
 
 // Функция для очистки всех замен
 function clearAllChanges() {
-    if (confirm('Вы уверены, что хотите удалить все замены?')) {
-        scheduleChanges = [];
-        localStorage.setItem('scheduleChanges', JSON.stringify(scheduleChanges));
-        updateScheduleChanges();
-        showNotification('Все замены удалены');
-    }
+    scheduleChanges = [];
+    updateChangesData(scheduleChanges); // Обновляем данные в файле
+    updateScheduleChanges();
+    showNotification('Все замены очищены');
+    exportChangesToFile(); // Экспортируем пустой файл
 }
 
 // Функция для загрузки файла с заменами
@@ -415,6 +420,11 @@ document.addEventListener('DOMContentLoaded', () => {
     displayDutyCalendar();
     initializeAdminPanel();
     
-    // Обновляем изменения каждые 30 минут
-    setInterval(updateScheduleChanges, 30 * 60 * 1000);
+    // Инициализируем замены из файла данных
+    if (typeof scheduleChangesData !== 'undefined') {
+        scheduleChanges = [...scheduleChangesData];
+    }
+    
+    // Обновляем изменения каждые 5 минут
+    setInterval(updateScheduleChanges, 5 * 60 * 1000);
 }); 
