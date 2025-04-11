@@ -137,7 +137,7 @@ function hideAdminPanel() {
 
 function loginAdmin() {
     const password = document.getElementById('admin-password').value;
-    if (password === '123456') {
+    if (password === '125690kir') {
         document.getElementById('login-modal').style.display = 'none';
         document.getElementById('admin-panel').style.display = 'block';
         isAdmin = true;
