@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дежурства группы</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Дежурства группы</h1>
+            <button onclick="document.getElementById('login-modal').style.display='block'" class="admin-button">
+                Проставить болеющих
+            </button>
+        </header>
+        
+        <main>
+            <section class="duty-section">
+                <h2>Текущее дежурство</h2>
+                <div class="current-duty" id="current-duty-person">
+                    <!-- Информация о дежурных будет добавлена через JavaScript -->
+                </div>
+            </section>
+
+            <section class="duty-calendar-section">
+                <h2>Календарь дежурств</h2>
+                <div id="duty-calendar">
+                    <!-- Календарь дежурств будет добавлен через JavaScript -->
+                </div>
+            </section>
+
+            <section class="schedule-section">
+                <h2>Расписание на неделю</h2>
+                <div class="schedule">
+                    <!-- Расписание будет добавлено через JavaScript -->
+                </div>
+            </section>
+
+            <section class="changes-section">
+                <h2>Изменения в расписании</h2>
+                <div class="schedule-changes">
+                    <div class="last-update">
+                        Последнее обновление: <span id="last-update-time">-</span>
+                    </div>
+                    <div id="schedule-changes-list">
+                        <!-- Изменения будут добавлены через JavaScript -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Модальное окно для входа в админ-панель -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <h3>Вход в админ-панель</h3>
+                <input type="password" id="admin-password" placeholder="Введите пароль">
+                <button onclick="loginAdmin()">Войти</button>
+                <button onclick="document.getElementById('login-modal').style.display='none'">Отмена</button>
+            </div>
+        </div>
+
+        <!-- Админ-панель -->
+        <div id="admin-panel" class="modal">
+            <div class="modal-content">
+                <h2>Админ-панель</h2>
+                
+                <div class="admin-section">
+                    <h3>Отметить болеющих студентов</h3>
+                    <div class="students-grid">
+                        <!-- Список студентов будет добавлен через JavaScript -->
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>Добавить замену</h3>
+                    <form id="changes-form" onsubmit="event.preventDefault(); addScheduleChange();">
+                        <div class="form-row">
+                            <label>
+                                Номер пары:
+                                <input type="number" id="change-para" min="1" max="5" required>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Заменяемый предмет:
+                                <input type="text" id="change-original" required>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Преподаватель:
+                                <input type="text" id="change-teacher" required>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Новый предмет:
+                                <input type="text" id="change-replacement" required>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Новый преподаватель:
+                                <input type="text" id="change-new-teacher" required>
+                            </label>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="add-btn">Добавить замену</button>
+                            <button type="button" onclick="clearAllChanges()" class="clear-btn">Очистить все замены</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="admin-buttons">
+                    <button onclick="hideAdminPanel()" class="close-btn">Закрыть</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2024 Дежурства группы</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
